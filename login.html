@@ -72,29 +72,25 @@
   <script>
     "use strict";
 
-    // Init Firebase
-    firebase.initializeApp(FIREBASE_CONFIG);
+    // Init Supabase
+    const _sb = initSupabase();
 
-    // Jika sudah login, redirect ke admin
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        saveSession(user.uid, user.email);
-        window.location.href = "admin.html";
-      }
-    });
-
-    const form    = document.getElementById("login-form");
-    const btn     = document.getElementById("login-btn");
-    const errEl   = document.getElementById("login-error");
-    const errMsg  = document.getElementById("login-error-msg");
-
-    function showError(msg) {
-      errMsg.textContent = msg;
-      errEl.classList.add("visible");
+    // Jika sudah login, langsung redirect ke admin
+    if (_sb) {
+      _sb.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          window.location.href = "admin.html";
+        }
+      });
     }
-    function hideError() {
-      errEl.classList.remove("visible");
-    }
+
+    const form   = document.getElementById("login-form");
+    const btn    = document.getElementById("login-btn");
+    const errEl  = document.getElementById("login-error");
+    const errMsg = document.getElementById("login-error-msg");
+
+    function showError(msg) { errMsg.textContent = msg; errEl.classList.add("visible"); }
+    function hideError()    { errEl.classList.remove("visible"); }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -103,30 +99,19 @@
       const email    = form.querySelector("#login-email").value.trim();
       const password = form.querySelector("#login-password").value;
 
-      if (!email || !password) {
-        showError("Email dan password wajib diisi.");
-        return;
-      }
+      if (!email || !password) { showError("Email dan password wajib diisi."); return; }
 
       btn.disabled    = true;
       btn.textContent = "Memproses...";
 
       try {
-        const cred = await loginWithEmail(email, password);
-        saveSession(cred.id, cred.email);
+        const user = await loginWithEmail(email, password);
         showToast("Login berhasil! Mengalihkan...", "success");
         setTimeout(() => { window.location.href = "admin.html"; }, 800);
       } catch (err) {
         showError(err.message);
         btn.disabled    = false;
         btn.textContent = "🔐 Masuk";
-      }
-    });
-
-    // Keyboard: Enter submit
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && document.activeElement.tagName !== "BUTTON") {
-        form.dispatchEvent(new Event("submit"));
       }
     });
   </script>
