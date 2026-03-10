@@ -1,49 +1,46 @@
 /**
  * =============================================================
- * BABEKU AUDIO - Admin Module
- * =============================================================
- * CRUD produk dan review via Firebase Firestore + Storage.
- * File ini hanya di-load di admin.html.
+ * BABEKU AUDIO - Admin Module (Supabase)
  * =============================================================
  */
 
 "use strict";
 
-// ============================
-// STATE ADMIN
-// ============================
 const AdminState = {
-  db:              null,
-  storage:         null,
-  editingProductId: null,   // null = tambah baru, string = edit existing
-  pendingFiles:    [],      // Array<File> yang akan diupload
-  existingUrls:    [],      // Array<string> URL foto yang sudah ada (saat edit)
-  uploadedUrls:    []       // Array<string> URL yang berhasil diupload
+  editingProductId: null,
+  pendingFiles:     [],
+  existingUrls:     [],
 };
 
 // ============================
-// INIT ADMIN
+// INIT
 // ============================
 document.addEventListener("DOMContentLoaded", async () => {
   const sb = initSupabase();
   if (!sb) { window.location.href = "login.html"; return; }
 
-  // Tunggu session dari Supabase selesai load dulu
-  const { data: { session }, error } = await sb.auth.getSession();
+  // Tunggu session Supabase selesai load — jangan pakai callback
+  const { data, error } = await sb.auth.getSession();
+  const session = data?.session;
+
+  console.log("Session check:", session ? "VALID" : "NULL", error || "");
 
   if (!session || !session.user) {
-    // Benar-benar tidak ada session — baru redirect
+    console.log("No session — redirecting to login");
     window.location.href = "login.html";
     return;
   }
 
-  // Session valid — lanjut load admin
+  // Session valid
   window._authUser = session.user;
   saveSession(session.user.id, session.user.email);
-  document.getElementById("admin-email").textContent = session.user.email;
 
-  // Listen perubahan auth state (untuk handle logout)
+  const emailEl = document.getElementById("admin-email");
+  if (emailEl) emailEl.textContent = session.user.email;
+
+  // Hanya redirect saat benar-benar logout
   sb.auth.onAuthStateChange((event, newSession) => {
+    console.log("Auth event:", event);
     if (event === "SIGNED_OUT") {
       window.location.href = "login.html";
     }
@@ -52,142 +49,94 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadAdminDashboard();
 });
 
-
-function onAdminLogin(user) {
-  document.getElementById("admin-email").textContent = user.email;
-  loadAdminDashboard();
-}
-
-// ============================
-// LOAD DASHBOARD
-// ============================
 async function loadAdminDashboard() {
-  await Promise.all([
-    loadAdminProducts(),
-    loadAdminReviews(),
-    loadAdminStats()
-  ]);
+  await Promise.all([loadAdminProducts(), loadAdminReviews(), loadAdminStats()]);
 }
-
-async function loadAdminStats() {
-  try {
-    const [prodSnap, revSnap] = await Promise.all([
-      AdminState.db.collection("products").get(),
-      AdminState.db.collection("reviews").get()
-    ]);
-
-    const reviews      = revSnap.docs.map(d => d.data());
-    const totalProds   = prodSnap.size;
-    const totalReviews = revSnap.size;
-    const avgRating    = totalReviews > 0
-      ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / totalReviews).toFixed(1)
-      : "0.0";
-
-    document.getElementById("stat-products").textContent  = totalProds;
-    document.getElementById("stat-reviews").textContent   = totalReviews;
-    document.getElementById("stat-avg-rating").textContent = avgRating;
-  } catch (err) {
-    console.error("Stats error:", err);
-  }
-}
-
 
 // ============================
-// ADMIN PRODUCTS LIST
+// STATS
+// ============================
+async function loadAdminStats() {
+  const [
+    { count: totalProds },
+    { data: reviews }
+  ] = await Promise.all([
+    window._supabase.from("products").select("*", { count: "exact", head: true }),
+    window._supabase.from("reviews").select("rating")
+  ]);
+
+  const totalReviews = reviews?.length || 0;
+  const avgRating    = totalReviews > 0
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / totalReviews).toFixed(1)
+    : "0.0";
+
+  document.getElementById("stat-products").textContent   = totalProds   || 0;
+  document.getElementById("stat-reviews").textContent    = totalReviews;
+  document.getElementById("stat-avg-rating").textContent = avgRating;
+}
+
+// ============================
+// PRODUCTS TABLE
 // ============================
 async function loadAdminProducts() {
-  const container = document.getElementById("admin-products-list");
-  if (!container) return;
+  const tbody = document.getElementById("admin-products-list");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" class="loading-row">Memuat produk...</td></tr>`;
 
-  container.innerHTML = `<tr><td colspan="5" class="loading-row">Memuat produk...</td></tr>`;
+  const { data, error } = await window._supabase
+    .from("products").select("*").order("created_at", { ascending: false });
 
-  try {
-    const snap = await AdminState.db
-      .collection("products")
-      .orderBy("createdAt", "desc")
-      .get();
-
-    if (snap.empty) {
-      container.innerHTML = `<tr><td colspan="5" class="empty-row">Belum ada produk. Tambah produk pertama!</td></tr>`;
-      return;
-    }
-
-    container.innerHTML = snap.docs.map(doc => {
-      const p = doc.data();
-      return `
-        <tr>
-          <td>
-            <img
-              src="${escapeHtml(p.fotoUrls && p.fotoUrls[0] ? p.fotoUrls[0] : "https://placehold.co/60x45/1e3a8a/f59e0b?text=No+Img")}"
-              alt="${escapeHtml(p.name)}"
-              class="admin-thumb"
-              onerror="this.src='https://placehold.co/60x45/1e3a8a/f59e0b?text=X'"
-            >
-          </td>
-          <td class="product-name-cell">${escapeHtml(p.name)}</td>
-          <td>${formatRupiah(p.price)}</td>
-          <td>
-            ${renderStars(p.ratingAverage || 0)}
-            <span class="text-muted">(${p.totalReviews || 0})</span>
-          </td>
-          <td class="action-cell">
-            <button class="btn-admin-edit" onclick="openEditProduct('${doc.id}')">✏️ Edit</button>
-            <button class="btn-admin-delete" onclick="confirmDeleteProduct('${doc.id}', '${escapeHtml(p.name).replace(/'/g,"\\'")}')">🗑️ Hapus</button>
-          </td>
-        </tr>`;
-    }).join("");
-  } catch (err) {
-    console.error("Load admin products error:", err);
-    container.innerHTML = `<tr><td colspan="5" class="error-row">Gagal memuat produk. ${escapeHtml(err.message)}</td></tr>`;
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Belum ada produk.</td></tr>`; return;
   }
+
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td><img src="${escapeHtml(p.foto_urls?.[0] || "https://placehold.co/60x45/1e3a8a/f59e0b?text=No+Img")}"
+        alt="${escapeHtml(p.name)}" class="admin-thumb"
+        onerror="this.src='https://placehold.co/60x45/1e3a8a/f59e0b?text=X'"></td>
+      <td class="product-name-cell">${escapeHtml(p.name)}</td>
+      <td>${formatRupiah(p.price)}</td>
+      <td>${renderStars(p.rating_average || 0)} <span class="text-muted">(${p.total_reviews || 0})</span></td>
+      <td class="action-cell">
+        <button class="btn-admin-edit"   onclick="openEditProduct('${p.id}')">✏️ Edit</button>
+        <button class="btn-admin-delete" onclick="confirmDeleteProduct('${p.id}', '${escapeHtml(p.name).replace(/'/g,"\\'")}')">🗑️ Hapus</button>
+      </td>
+    </tr>`).join("");
 }
 
-
 // ============================
-// ADMIN REVIEWS LIST
+// REVIEWS TABLE
 // ============================
 async function loadAdminReviews() {
-  const container = document.getElementById("admin-reviews-list");
-  if (!container) return;
+  const tbody = document.getElementById("admin-reviews-list");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" class="loading-row">Memuat ulasan...</td></tr>`;
 
-  container.innerHTML = `<tr><td colspan="5" class="loading-row">Memuat ulasan...</td></tr>`;
+  const { data, error } = await window._supabase
+    .from("reviews").select("*").order("created_at", { ascending: false });
 
-  try {
-    const snap = await AdminState.db
-      .collection("reviews")
-      .orderBy("createdAt", "desc")
-      .get();
-
-    if (snap.empty) {
-      container.innerHTML = `<tr><td colspan="5" class="empty-row">Belum ada ulasan.</td></tr>`;
-      return;
-    }
-
-    container.innerHTML = snap.docs.map(doc => {
-      const r = doc.data();
-      return `
-        <tr>
-          <td>${escapeHtml(r.name || "Anonim")}</td>
-          <td>${renderStars(r.rating || 0)}</td>
-          <td class="review-text-cell">${escapeHtml(r.ulasan || "-")}</td>
-          <td>${r.isOwner ? '<span class="badge-owner">Admin</span>' : '<span class="badge-user">User</span>'}</td>
-          <td>
-            <button class="btn-admin-delete"
-              onclick="confirmDeleteReview('${doc.id}', '${escapeHtml(r.name || "").replace(/'/g,"\\'")}')">
-              🗑️ Hapus
-            </button>
-          </td>
-        </tr>`;
-    }).join("");
-  } catch (err) {
-    console.error("Load admin reviews error:", err);
-    container.innerHTML = `<tr><td colspan="5" class="error-row">Gagal memuat ulasan.</td></tr>`;
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Belum ada ulasan.</td></tr>`; return;
   }
+
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${escapeHtml(r.name || "Anonim")}</td>
+      <td>${renderStars(r.rating || 0)}</td>
+      <td class="review-text-cell">${escapeHtml(r.ulasan || "-")}</td>
+      <td>${r.is_owner ? '<span class="badge-owner">Admin</span>' : '<span class="badge-user">User</span>'}</td>
+      <td>
+        <button class="btn-admin-delete"
+          onclick="confirmDeleteReview('${r.id}', '${escapeHtml(r.name || "").replace(/'/g,"\\'")}')">
+          🗑️ Hapus
+        </button>
+      </td>
+    </tr>`).join("");
 }
 
-
 // ============================
-// PRODUCT FORM (Tambah / Edit)
+// PRODUCT FORM
 // ============================
 function openAddProduct() {
   AdminState.editingProductId = null;
@@ -199,34 +148,26 @@ function openAddProduct() {
 }
 
 async function openEditProduct(productId) {
-  try {
-    const doc = await AdminState.db.collection("products").doc(productId).get();
-    if (!doc.exists) {
-      showToast("Produk tidak ditemukan.", "error");
-      return;
-    }
-    const p = doc.data();
+  const { data: p, error } = await window._supabase
+    .from("products").select("*").eq("id", productId).single();
 
-    AdminState.editingProductId = productId;
-    AdminState.pendingFiles     = [];
-    AdminState.existingUrls     = p.fotoUrls ? [...p.fotoUrls] : [];
+  if (error || !p) { showToast("Produk tidak ditemukan.", "error"); return; }
 
-    // Isi form
-    document.getElementById("product-form-title").textContent  = "✏️ Edit Produk";
-    document.getElementById("input-product-name").value        = p.name || "";
-    document.getElementById("input-product-price").value       = p.price || "";
-    document.getElementById("input-product-description").value = p.description || "";
-    document.getElementById("input-product-category").value    = p.category || "lainnya";
-    document.getElementById("input-product-condition").value   = p.condition || "";
-    document.getElementById("input-product-warranty").value    = p.warranty || "Garansi 7 Hari";
-    document.getElementById("input-product-location").value    = p.location || STORE_CONFIG.address;
+  AdminState.editingProductId = productId;
+  AdminState.pendingFiles     = [];
+  AdminState.existingUrls     = p.foto_urls ? [...p.foto_urls] : [];
 
-    renderPhotoPreview();
-    document.getElementById("product-modal-form").classList.add("open");
-  } catch (err) {
-    console.error("Open edit error:", err);
-    showToast("Gagal membuka form edit.", "error");
-  }
+  document.getElementById("product-form-title").textContent         = "✏️ Edit Produk";
+  document.getElementById("input-product-name").value               = p.name || "";
+  document.getElementById("input-product-price").value              = p.price || "";
+  document.getElementById("input-product-description").value        = p.description || "";
+  document.getElementById("input-product-category").value           = p.category || "lainnya";
+  document.getElementById("input-product-condition").value          = p.condition || "";
+  document.getElementById("input-product-warranty").value           = p.warranty || "Garansi 7 Hari";
+  document.getElementById("input-product-location").value           = p.location || STORE_CONFIG.address;
+
+  renderPhotoPreview();
+  document.getElementById("product-modal-form").classList.add("open");
 }
 
 function closeProductForm() {
@@ -235,62 +176,38 @@ function closeProductForm() {
 }
 
 function resetProductForm() {
-  const form = document.getElementById("product-form");
-  if (form) form.reset();
-  AdminState.pendingFiles  = [];
-  AdminState.existingUrls  = [];
-  document.getElementById("photo-preview").innerHTML = "";
+  document.getElementById("product-form")?.reset();
+  AdminState.pendingFiles = [];
+  AdminState.existingUrls = [];
+  document.getElementById("photo-preview").innerHTML   = "";
   document.getElementById("upload-progress").style.display = "none";
+  const counter = document.getElementById("photo-counter");
+  if (counter) counter.textContent = "0/5 foto";
 }
 
-
 // ============================
-// FOTO UPLOAD HANDLING
+// FOTO UPLOAD
 // ============================
-
-// Inisialisasi drag & drop setelah DOM ready
 document.addEventListener("DOMContentLoaded", () => {
-  const dropZone   = document.getElementById("photo-dropzone");
-  const fileInput  = document.getElementById("photo-input");
+  const dropZone  = document.getElementById("photo-dropzone");
+  const fileInput = document.getElementById("photo-input");
   if (!dropZone || !fileInput) return;
 
-  // Klik drop zone → trigger file input
-  dropZone.addEventListener("click", () => fileInput.click());
-
-  // Drag & drop
-  dropZone.addEventListener("dragover",  (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
-  dropZone.addEventListener("dragleave", ()  => dropZone.classList.remove("dragover"));
-  dropZone.addEventListener("drop",      (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-    addFiles(Array.from(e.dataTransfer.files));
-  });
-
-  // File input change
-  fileInput.addEventListener("change", () => {
-    addFiles(Array.from(fileInput.files));
-    fileInput.value = ""; // Reset agar bisa upload file sama lagi
-  });
+  dropZone.addEventListener("click",     () => fileInput.click());
+  dropZone.addEventListener("dragover",  e  => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop",      e  => { e.preventDefault(); dropZone.classList.remove("dragover"); addFiles(Array.from(e.dataTransfer.files)); });
+  fileInput.addEventListener("change",   () => { addFiles(Array.from(fileInput.files)); fileInput.value = ""; });
 });
 
 function addFiles(files) {
-  const maxTotal = APP_CONFIG.maxPhotosPerProduct;
-  const current  = AdminState.existingUrls.length + AdminState.pendingFiles.length;
-
+  const max = APP_CONFIG.maxPhotosPerProduct;
   for (const file of files) {
-    if (current >= maxTotal) {
-      showToast(`Maksimal ${maxTotal} foto per produk.`, "warning");
-      break;
+    if (AdminState.existingUrls.length + AdminState.pendingFiles.length >= max) {
+      showToast(`Maksimal ${max} foto per produk.`, "warning"); break;
     }
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      showToast(validation.error, "error");
-      continue;
-    }
-    if (AdminState.pendingFiles.length + AdminState.existingUrls.length >= maxTotal) {
-      showToast(`Maksimal ${maxTotal} foto per produk.`, "warning");
-      break;
-    }
+    const v = validateImageFile(file);
+    if (!v.valid) { showToast(v.error, "error"); continue; }
     AdminState.pendingFiles.push(file);
   }
   renderPhotoPreview();
@@ -299,103 +216,85 @@ function addFiles(files) {
 function renderPhotoPreview() {
   const container = document.getElementById("photo-preview");
   if (!container) return;
-
   let html = "";
 
-  // Foto existing (dari Firestore/Storage)
   AdminState.existingUrls.forEach((url, i) => {
     html += `
-      <div class="preview-item" data-type="existing" data-index="${i}">
+      <div class="preview-item">
         <img src="${escapeHtml(url)}" alt="Foto ${i+1}" onerror="this.src='https://placehold.co/100x75?text=X'">
-        <button type="button" class="preview-remove" onclick="removeExistingPhoto(${i})" aria-label="Hapus foto">✕</button>
+        <button type="button" class="preview-remove" onclick="removeExistingPhoto(${i})">✕</button>
         <span class="preview-badge">Ada</span>
       </div>`;
   });
-
-  // Foto baru (pending upload)
   AdminState.pendingFiles.forEach((file, i) => {
-    const objectUrl = URL.createObjectURL(file);
     html += `
-      <div class="preview-item" data-type="pending" data-index="${i}">
-        <img src="${objectUrl}" alt="Preview ${i+1}">
-        <button type="button" class="preview-remove" onclick="removePendingPhoto(${i})" aria-label="Hapus foto">✕</button>
+      <div class="preview-item">
+        <img src="${URL.createObjectURL(file)}" alt="Preview ${i+1}">
+        <button type="button" class="preview-remove" onclick="removePendingPhoto(${i})">✕</button>
         <span class="preview-badge new">Baru</span>
       </div>`;
   });
 
   container.innerHTML = html;
-
-  // Update counter
   const total = AdminState.existingUrls.length + AdminState.pendingFiles.length;
   const counter = document.getElementById("photo-counter");
   if (counter) counter.textContent = `${total}/${APP_CONFIG.maxPhotosPerProduct} foto`;
 }
 
-function removeExistingPhoto(idx) {
-  AdminState.existingUrls.splice(idx, 1);
-  renderPhotoPreview();
-}
+function removeExistingPhoto(i) { AdminState.existingUrls.splice(i, 1); renderPhotoPreview(); }
+function removePendingPhoto(i)  { AdminState.pendingFiles.splice(i, 1); renderPhotoPreview(); }
 
-function removePendingPhoto(idx) {
-  AdminState.pendingFiles.splice(idx, 1);
-  renderPhotoPreview();
-}
-
-
-// ============================
-// UPLOAD FOTO KE FIREBASE STORAGE
-// ============================
+/**
+ * Upload foto ke Supabase Storage.
+ * @param {string} productId
+ * @returns {Promise<string[]>} Array URL publik
+ */
 async function uploadPhotos(productId) {
-  const urls = [...AdminState.existingUrls]; // Mulai dari foto yang sudah ada
+  const urls  = [...AdminState.existingUrls];
   const files = AdminState.pendingFiles;
+  if (!files.length) return urls;
 
-  if (files.length === 0) return urls;
-
-  const progressBar     = document.getElementById("upload-progress");
-  const progressFill    = document.getElementById("progress-fill");
-  const progressText    = document.getElementById("progress-text");
-
+  const progressBar  = document.getElementById("upload-progress");
+  const progressFill = document.getElementById("progress-fill");
+  const progressText = document.getElementById("progress-text");
   progressBar.style.display = "block";
 
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const ext  = file.name.split(".").pop().toLowerCase();
-    // Generate nama file unik untuk menghindari collision
-    const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const path     = `products/${productId}/${filename}`;
-    const ref      = AdminState.storage.ref(path);
+    const file     = files[i];
+    const ext      = file.name.split(".").pop().toLowerCase();
+    const filename = `${productId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-    try {
-      await ref.put(file);
-      const url = await ref.getDownloadURL();
-      urls.push(url);
+    const { error: upErr } = await window._supabase.storage
+      .from(APP_CONFIG.storageBucket)
+      .upload(filename, file, { cacheControl: "3600", upsert: false });
 
-      // Update progress
-      const pct = Math.round(((i + 1) / files.length) * 100);
-      if (progressFill) progressFill.style.width = pct + "%";
-      if (progressText) progressText.textContent  = `Mengunggah... ${pct}%`;
-    } catch (err) {
-      console.error(`Upload error untuk ${file.name}:`, err);
-      showToast(`Gagal upload foto: ${file.name}`, "error");
+    if (upErr) {
+      console.error("Upload error:", upErr);
+      showToast(`Gagal upload ${file.name}: ${upErr.message}`, "error");
+      continue;
     }
+
+    // Ambil URL publik
+    const { data: { publicUrl } } = window._supabase.storage
+      .from(APP_CONFIG.storageBucket)
+      .getPublicUrl(filename);
+
+    urls.push(publicUrl);
+
+    const pct = Math.round(((i + 1) / files.length) * 100);
+    if (progressFill) progressFill.style.width = pct + "%";
+    if (progressText) progressText.textContent  = `Mengunggah... ${pct}%`;
   }
 
   progressBar.style.display = "none";
   return urls;
 }
 
-
 // ============================
 // SIMPAN PRODUK
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("product-form");
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await saveProduct();
-  });
+  document.getElementById("product-form")?.addEventListener("submit", async e => { e.preventDefault(); await saveProduct(); });
 });
 
 async function saveProduct() {
@@ -407,80 +306,74 @@ async function saveProduct() {
   const warranty    = sanitizeText(document.getElementById("input-product-warranty").value, 100);
   const location    = sanitizeText(document.getElementById("input-product-location").value, 200);
 
-  // Validasi
-  if (!name) { showToast("Nama produk wajib diisi.", "error"); return; }
+  if (!name)   { showToast("Nama produk wajib diisi.", "error"); return; }
   const price = parseRupiah(priceStr);
   if (!price || price <= 0) { showToast("Harga tidak valid.", "error"); return; }
   if (!description) { showToast("Deskripsi wajib diisi.", "error"); return; }
-
-  const totalPhotos = AdminState.existingUrls.length + AdminState.pendingFiles.length;
-  if (totalPhotos === 0) { showToast("Minimal 1 foto diperlukan.", "error"); return; }
+  if ((AdminState.existingUrls.length + AdminState.pendingFiles.length) === 0) {
+    showToast("Minimal 1 foto diperlukan.", "error"); return;
+  }
 
   const saveBtn = document.getElementById("btn-save-product");
-  saveBtn.disabled    = true;
+  saveBtn.disabled = true;
   saveBtn.textContent = "Menyimpan...";
 
   try {
     let productId = AdminState.editingProductId;
 
-    // Jika tambah baru, buat dokumen dulu untuk dapat ID
+    // Jika tambah baru, insert dulu untuk dapat UUID
     if (!productId) {
-      const ref = await AdminState.db.collection("products").add({ _temp: true });
-      productId = ref.id;
+      const { data: newProd, error: insertErr } = await window._supabase
+        .from("products")
+        .insert({ name: "__temp__", price: 1, description: "__temp__" })
+        .select("id")
+        .single();
+      if (insertErr) throw insertErr;
+      productId = newProd.id;
     }
 
-    // Upload foto
-    const fotoUrls = await uploadPhotos(productId);
+    const foto_urls = await uploadPhotos(productId);
 
-    const data = {
+    const payload = {
       name, price, description, category,
       condition, warranty,
       location:   location || STORE_CONFIG.address,
-      fotoUrls,
-      updatedAt:  firebase.firestore.Timestamp.now()
+      foto_urls,
+      updated_at: new Date().toISOString()
     };
 
+    let dbError;
     if (!AdminState.editingProductId) {
-      // Tambah baru: set semua field + createdAt
-      await AdminState.db.collection("products").doc(productId).set({
-        ...data,
-        ratingAverage: 0,
-        totalReviews:  0,
-        createdAt:     firebase.firestore.Timestamp.now()
-      });
+      // Update row yang baru dibuat tadi
+      ({ error: dbError } = await window._supabase
+        .from("products").update({ ...payload, rating_average: 0, total_reviews: 0 }).eq("id", productId));
     } else {
-      // Edit: hanya update field yang berubah
-      await AdminState.db.collection("products").doc(productId).update(data);
+      ({ error: dbError } = await window._supabase
+        .from("products").update(payload).eq("id", productId));
     }
+
+    if (dbError) throw dbError;
 
     showToast("Produk berhasil disimpan! ✅", "success");
     closeProductForm();
     await loadAdminDashboard();
-
   } catch (err) {
     console.error("Save product error:", err);
-    showToast("Gagal menyimpan produk: " + err.message, "error");
+    showToast("Gagal menyimpan: " + err.message, "error");
   } finally {
     saveBtn.disabled    = false;
     saveBtn.textContent = "💾 Simpan Produk";
   }
 }
 
-
 // ============================
 // HAPUS PRODUK
 // ============================
 function confirmDeleteProduct(productId, name) {
   const modal = document.getElementById("confirm-modal");
-  const msgEl = document.getElementById("confirm-message");
-  if (!modal || !msgEl) return;
-
-  msgEl.innerHTML = `Hapus produk <strong>${escapeHtml(name)}</strong>?<br><small>Tindakan ini tidak bisa dibatalkan.</small>`;
-
-  document.getElementById("confirm-ok").onclick = async () => {
-    modal.classList.remove("open");
-    await deleteProduct(productId);
-  };
+  document.getElementById("confirm-message").innerHTML =
+    `Hapus produk <strong>${escapeHtml(name)}</strong>?<br><small>Foto di Storage juga akan dihapus.</small>`;
+  document.getElementById("confirm-ok").onclick     = () => { modal.classList.remove("open"); deleteProduct(productId); };
   document.getElementById("confirm-cancel").onclick = () => modal.classList.remove("open");
   modal.classList.add("open");
 }
@@ -488,21 +381,22 @@ function confirmDeleteProduct(productId, name) {
 async function deleteProduct(productId) {
   try {
     // Hapus foto dari Storage
-    const doc = await AdminState.db.collection("products").doc(productId).get();
-    if (doc.exists) {
-      const urls = doc.data().fotoUrls || [];
-      for (const url of urls) {
-        try {
-          const ref = AdminState.storage.refFromURL(url);
-          await ref.delete();
-        } catch {
-          // Foto mungkin sudah dihapus manual atau URL berubah, skip
-        }
+    const { data: p } = await window._supabase.from("products").select("foto_urls").eq("id", productId).single();
+    if (p?.foto_urls?.length) {
+      // Extract path dari URL publik
+      const paths = p.foto_urls.map(url => {
+        const parts = url.split(`/${APP_CONFIG.storageBucket}/`);
+        return parts[1] || null;
+      }).filter(Boolean);
+
+      if (paths.length) {
+        await window._supabase.storage.from(APP_CONFIG.storageBucket).remove(paths);
       }
     }
 
-    // Hapus dokumen Firestore
-    await AdminState.db.collection("products").doc(productId).delete();
+    const { error } = await window._supabase.from("products").delete().eq("id", productId);
+    if (error) throw error;
+
     showToast("Produk berhasil dihapus.", "success");
     await loadAdminDashboard();
   } catch (err) {
@@ -511,18 +405,14 @@ async function deleteProduct(productId) {
   }
 }
 
-
 // ============================
-// FAKE REVIEW (Admin)
+// FAKE REVIEW
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("fake-review-form");
   if (!form) return;
   setupInteractiveStarsAdmin(form);
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await submitFakeReview(form);
-  });
+  form.addEventListener("submit", async e => { e.preventDefault(); await submitFakeReview(form); });
 });
 
 function setupInteractiveStarsAdmin(container) {
@@ -530,7 +420,7 @@ function setupInteractiveStarsAdmin(container) {
   if (!starsEl) return;
   starsEl.querySelectorAll(".star-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const val    = parseInt(btn.dataset.value, 10);
+      const val = parseInt(btn.dataset.value, 10);
       const hidden = starsEl.querySelector("input[type=hidden]");
       if (hidden) hidden.value = val;
       starsEl.querySelectorAll(".star-btn").forEach((b, i) => {
@@ -542,13 +432,9 @@ function setupInteractiveStarsAdmin(container) {
 }
 
 async function submitFakeReview(form) {
-  const nameInput   = form.querySelector("[name=fake-name]");
-  const ratingInput = form.querySelector("[name=fake-rating]");
-  const ulasanInput = form.querySelector("[name=fake-ulasan]");
-
-  const name   = sanitizeText(nameInput ? nameInput.value : "", 100);
-  const rating = parseInt(ratingInput ? ratingInput.value : "0", 10);
-  const ulasan = sanitizeText(ulasanInput ? ulasanInput.value : "", 1000);
+  const name   = sanitizeText(form.querySelector("[name=fake-name]")?.value || "", 100);
+  const rating = parseInt(form.querySelector("[name=fake-rating]")?.value || "0", 10);
+  const ulasan = sanitizeText(form.querySelector("[name=fake-ulasan]")?.value || "", 1000);
 
   if (!name)   { showToast("Nama wajib diisi.", "error"); return; }
   if (!rating) { showToast("Pilih rating.", "error"); return; }
@@ -558,23 +444,15 @@ async function submitFakeReview(form) {
   btn.disabled = true;
 
   try {
-    await AdminState.db.collection("reviews").add({
-      productId: null,
-      name,
-      rating,
-      ulasan,
-      isOwner:   true,
-      createdAt: firebase.firestore.Timestamp.now()
+    const { error } = await window._supabase.from("reviews").insert({
+      product_id: null, name, rating, ulasan, is_owner: true
     });
+    if (error) throw error;
     showToast("Review berhasil ditambahkan. ⭐", "success");
     form.reset();
-    // Reset bintang UI
     const starsEl = form.querySelector(".star-rating-input");
     if (starsEl) {
-      starsEl.querySelectorAll(".star-btn").forEach(b => {
-        b.classList.remove("active");
-        b.setAttribute("aria-pressed", "false");
-      });
+      starsEl.querySelectorAll(".star-btn").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed","false"); });
       const hidden = starsEl.querySelector("input[type=hidden]");
       if (hidden) hidden.value = "0";
     }
@@ -582,52 +460,37 @@ async function submitFakeReview(form) {
     await loadAdminStats();
   } catch (err) {
     console.error("Fake review error:", err);
-    showToast("Gagal menambahkan review.", "error");
+    showToast("Gagal: " + err.message, "error");
   } finally {
     btn.disabled = false;
   }
 }
-
 
 // ============================
 // HAPUS REVIEW
 // ============================
 function confirmDeleteReview(reviewId, name) {
   const modal = document.getElementById("confirm-modal");
-  const msgEl = document.getElementById("confirm-message");
-  if (!modal || !msgEl) return;
-
-  msgEl.innerHTML = `Hapus ulasan dari <strong>${escapeHtml(name)}</strong>?`;
-  document.getElementById("confirm-ok").onclick = async () => {
-    modal.classList.remove("open");
-    await deleteReview(reviewId);
-  };
+  document.getElementById("confirm-message").innerHTML = `Hapus ulasan dari <strong>${escapeHtml(name)}</strong>?`;
+  document.getElementById("confirm-ok").onclick     = () => { modal.classList.remove("open"); deleteReview(reviewId); };
   document.getElementById("confirm-cancel").onclick = () => modal.classList.remove("open");
   modal.classList.add("open");
 }
 
 async function deleteReview(reviewId) {
-  try {
-    await AdminState.db.collection("reviews").doc(reviewId).delete();
-    showToast("Ulasan berhasil dihapus.", "success");
-    await loadAdminReviews();
-    await loadAdminStats();
-  } catch (err) {
-    console.error("Delete review error:", err);
-    showToast("Gagal menghapus ulasan.", "error");
-  }
+  const { error } = await window._supabase.from("reviews").delete().eq("id", reviewId);
+  if (error) { showToast("Gagal menghapus ulasan.", "error"); return; }
+  showToast("Ulasan berhasil dihapus.", "success");
+  await loadAdminReviews();
+  await loadAdminStats();
 }
 
-
 // ============================
-// ADMIN LOGOUT
+// LOGOUT
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  const logoutBtn = document.getElementById("btn-logout");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      await logoutUser();
-      window.location.href = "index.html";
-    });
-  }
+  document.getElementById("btn-logout")?.addEventListener("click", async () => {
+    await logoutUser();
+    window.location.href = "index.html";
+  });
 });
