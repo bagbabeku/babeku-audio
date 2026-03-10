@@ -24,23 +24,34 @@ const AdminState = {
 // ============================
 // INIT ADMIN
 // ============================
-document.addEventListener("DOMContentLoaded", () => {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  AdminState.db      = firebase.firestore();
-  AdminState.storage = firebase.storage();
+document.addEventListener("DOMContentLoaded", async () => {
+  const sb = initSupabase();
+  if (!sb) { window.location.href = "login.html"; return; }
 
-  // Cek auth sebelum render
-  initAuth(
-    (user) => onAdminLogin(user),
-    ()     => redirectToLogin()
-  );
+  // Tunggu session dari Supabase selesai load dulu
+  const { data: { session }, error } = await sb.auth.getSession();
+
+  if (!session || !session.user) {
+    // Benar-benar tidak ada session — baru redirect
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Session valid — lanjut load admin
+  window._authUser = session.user;
+  saveSession(session.user.id, session.user.email);
+  document.getElementById("admin-email").textContent = session.user.email;
+
+  // Listen perubahan auth state (untuk handle logout)
+  sb.auth.onAuthStateChange((event, newSession) => {
+    if (event === "SIGNED_OUT") {
+      window.location.href = "login.html";
+    }
+  });
+
+  await loadAdminDashboard();
 });
 
-function redirectToLogin() {
-  // Cek apakah sudah ada session valid (menghindari redirect loop)
-  if (getSession()) return; // onAuthStateChanged akan menangani ini
-  window.location.href = "login.html";
-}
 
 function onAdminLogin(user) {
   document.getElementById("admin-email").textContent = user.email;
