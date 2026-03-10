@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dashboard Admin — Babeku Audio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="admin-sidebar" id="admin-sidebar" aria-label="Navigasi admin">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">B</div>
+        <span class="sidebar-logo-name">Babeku Audio</span>
+      </div>
+      <span class="sidebar-subtitle">Admin Panel</span>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Menu admin">
+      <a href="#section-stats"    class="active">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="#section-products">
+        <span class="nav-icon">📦</span> Produk
+      </a>
+      <a href="#section-reviews">
+        <span class="nav-icon">⭐</span> Ulasan
+      </a>
+      <a href="#section-fake-review">
+        <span class="nav-icon">✍️</span> Tambah Review
+      </a>
+      <a href="index.html">
+        <span class="nav-icon">🏪</span> Lihat Toko
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span id="admin-email"></span>
+      <button id="btn-logout" class="btn">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="admin-main" role="main">
+
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">📊 Dashboard Admin</h1>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" onclick="openAddProduct()">➕ Tambah Produk</button>
+        <a href="index.html" class="btn btn-ghost">🏪 Lihat Toko</a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- ==================== STATS ==================== -->
+      <section id="section-stats" class="admin-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">📦</div>
+            <div>
+              <div class="stat-label">Total Produk</div>
+              <div class="stat-value" id="stat-products">—</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">💬</div>
+            <div>
+              <div class="stat-label">Total Ulasan</div>
+              <div class="stat-value" id="stat-reviews">—</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">⭐</div>
+            <div>
+              <div class="stat-label">Rating Rata-rata</div>
+              <div class="stat-value" id="stat-avg-rating">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== PRODUCTS TABLE ==================== -->
+      <section id="section-products" class="admin-section">
+        <div class="admin-section-header">
+          <h2>📦 Daftar Produk</h2>
+          <button class="btn btn-primary" onclick="openAddProduct()">➕ Tambah Produk</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" aria-label="Daftar produk">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nama Produk</th>
+                <th>Harga</th>
+                <th>Rating</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-list">
+              <tr><td colspan="5" class="loading-row">Memuat produk...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== REVIEWS TABLE ==================== -->
+      <section id="section-reviews" class="admin-section">
+        <div class="admin-section-header">
+          <h2>⭐ Daftar Ulasan</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" aria-label="Daftar ulasan">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Rating</th>
+                <th>Ulasan</th>
+                <th>Tipe</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-reviews-list">
+              <tr><td colspan="5" class="loading-row">Memuat ulasan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================== FAKE REVIEW FORM ==================== -->
+      <section id="section-fake-review" class="admin-section">
+        <div class="fake-review-section">
+          <h2>✍️ Tambah Review (Owner)</h2>
+          <p style="color:var(--text-muted);margin-bottom:20px;font-size:.9rem;">
+            Review ini akan ditampilkan sebagai review umum di halaman utama toko (tanpa tanda khusus kepada pengunjung).
+          </p>
+
+          <form id="fake-review-form" novalidate aria-label="Form tambah review palsu">
+            <div class="form-group">
+              <label class="form-label" for="fake-name">Nama Reviewer *</label>
+              <input
+                type="text"
+                id="fake-name"
+                name="fake-name"
+                class="form-input"
+                placeholder="Contoh: Budi Santoso"
+                maxlength="100"
+                required
+              >
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rating *</label>
+              <div class="star-rating-input" role="group" aria-label="Pilih rating">
+                <button type="button" class="star-btn" data-value="1" aria-label="1 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="2" aria-label="2 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="3" aria-label="3 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="4" aria-label="4 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="5" aria-label="5 bintang" aria-pressed="false">★</button>
+                <input type="hidden" name="fake-rating" value="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fake-ulasan">Isi Ulasan *</label>
+              <textarea
+                id="fake-ulasan"
+                name="fake-ulasan"
+                class="form-textarea"
+                placeholder="Contoh: Barangnya bagus dan kondisi sesuai deskripsi. Pengiriman cepat!"
+                rows="4"
+                maxlength="1000"
+                required
+              ></textarea>
+            </div>
+            <button type="submit" class="btn btn-amber">⭐ Tambah Review</button>
+          </form>
+        </div>
+      </section>
+
+    </div> <!-- /.admin-content -->
+  </main>
+</div>
+
+
+<!-- ==================== PRODUCT FORM MODAL ==================== -->
+<div class="admin-modal-overlay" id="product-modal-form" role="dialog" aria-modal="true" aria-labelledby="product-form-title">
+  <div class="admin-modal">
+    <div class="admin-modal-header">
+      <h3 id="product-form-title">➕ Tambah Produk Baru</h3>
+      <button class="modal-close-btn" onclick="closeProductForm()" aria-label="Tutup form">&times;</button>
+    </div>
+
+    <div class="admin-modal-body">
+      <form id="product-form" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-name">Nama Produk *</label>
+          <input
+            type="text"
+            id="input-product-name"
+            class="form-input"
+            placeholder="Contoh: Speaker Active Yamaha 15 Inch"
+            maxlength="200"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-price">Harga *</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">Rp</span>
+            <input
+              type="number"
+              id="input-product-price"
+              class="form-input"
+              placeholder="2500000"
+              min="1"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-description">Deskripsi *</label>
+          <textarea
+            id="input-product-description"
+            class="form-textarea"
+            placeholder="Jelaskan kondisi, spesifikasi, dan keunggulan produk..."
+            rows="4"
+            maxlength="2000"
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-category">Kategori</label>
+          <select id="input-product-category" class="form-select form-input">
+            <option value="speaker">Speaker</option>
+            <option value="amplifier">Amplifier</option>
+            <option value="mixer">Mixer</option>
+            <option value="microphone">Microphone</option>
+            <option value="sound-system">Sound System</option>
+            <option value="salon">Peralatan Salon</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-condition">Kondisi Produk</label>
+          <input
+            type="text"
+            id="input-product-condition"
+            class="form-input"
+            placeholder="Contoh: Bekas - Kondisi 90%"
+            maxlength="100"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-warranty">Garansi</label>
+          <input
+            type="text"
+            id="input-product-warranty"
+            class="form-input"
+            placeholder="Contoh: Garansi 7 Hari"
+            maxlength="100"
+            value="Garansi 7 Hari"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-product-location">Lokasi</label>
+          <input
+            type="text"
+            id="input-product-location"
+            class="form-input"
+            placeholder="Contoh: Tuban, Jawa Timur"
+            maxlength="200"
+            value="Tuban, Jawa Timur"
+          >
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="form-group">
+          <label class="form-label">
+            Foto Produk *
+            <span style="font-weight:400;text-transform:none;font-size:.8rem;color:var(--text-muted)">
+              (1-5 foto, maks 2MB per foto)
+            </span>
+          </label>
+
+          <!-- Hidden file input -->
+          <input
+            type="file"
+            id="photo-input"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            style="display:none"
+            aria-label="Upload foto produk"
+          >
+
+          <!-- Drag & Drop Zone -->
+          <div class="photo-dropzone" id="photo-dropzone"
+               role="button" tabindex="0" aria-label="Klik atau seret foto ke sini">
+            <div class="dropzone-icon">📷</div>
+            <p class="dropzone-text">Klik atau seret foto ke sini</p>
+            <p class="dropzone-hint">JPG, PNG, atau WebP • Maks 2MB per foto</p>
+          </div>
+
+          <p class="photo-counter" id="photo-counter">0/5 foto</p>
+
+          <!-- Preview Grid -->
+          <div id="photo-preview"></div>
+
+          <!-- Upload Progress -->
+          <div id="upload-progress">
+            <div class="progress-bar">
+              <div id="progress-fill" style="width:0%"></div>
+            </div>
+            <p id="progress-text">Mempersiapkan...</p>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <div class="admin-modal-footer">
+      <button class="btn btn-ghost" onclick="closeProductForm()">Batal</button>
+      <button class="btn btn-primary" id="btn-save-product" onclick="saveProduct()">
+        💾 Simpan Produk
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== CONFIRM DELETE MODAL ==================== -->
+<div id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-heading">
+  <div class="confirm-card">
+    <div class="confirm-icon" aria-hidden="true">🗑️</div>
+    <h3 id="confirm-heading">Konfirmasi Hapus</h3>
+    <p id="confirm-message"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Batal</button>
+      <button class="btn btn-danger" id="confirm-ok">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- Firebase SDK -->
+
+<!-- Supabase JS SDK v2 via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- App Scripts -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>

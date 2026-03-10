@@ -1,0 +1,40 @@
+# ========================
+# Babeku Audio - .gitignore
+# ========================
+
+# Dependency directories (jika menggunakan npm tools lokal)
+node_modules/
+.npm/
+
+# Environment / secrets (jika pindah ke .env based config)
+.env
+.env.local
+.env.production
+
+# Editor / OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/settings.json
+
+# Build outputs (jika pakai build tools di masa depan)
+dist/
+build/
+
+# Log files
+*.log
+npm-debug.log*
+
+# ========================
+# CATATAN KEAMANAN:
+# File js/config.js BOLEH di-commit untuk proyek ini
+# (GitHub Pages membutuhkan file ini dapat diakses publik).
+# Keamanan bergantung pada Firebase Security Rules yang benar,
+# BUKAN pada menyembunyikan API key.
+# Baca README.md bagian "Security Notes" untuk info lebih.
+# ========================

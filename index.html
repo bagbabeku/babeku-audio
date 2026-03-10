@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Babeku Audio — Solusi Elektronik Bekas Berkualitas. Jual beli speaker, amplifier, mixer, microphone, sound system dan peralatan salon bekas berkualitas harga terjangkau.">
+  <meta property="og:title" content="Babeku Audio — Barang Bekas Berkualitas">
+  <meta property="og:description" content="Speaker, Amplifier, Mixer, Microphone bekas berkualitas harga terjangkau. Tuban, Jawa Timur.">
+  <meta name="theme-color" content="#1e3a8a">
+  <title>Babeku Audio — Barang Bekas Berkualitas</title>
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ==================== NAVIGATION ==================== -->
+<nav id="main-nav" role="navigation" aria-label="Navigasi utama">
+  <div class="nav-inner">
+    <!-- Logo -->
+    <a href="#hero" class="nav-logo" data-nav-target="hero" aria-label="Babeku Audio - Beranda">
+      <div class="nav-logo-icon">B</div>
+      <div class="nav-logo-text">
+        <span class="nav-logo-name" data-store-name>Babeku Audio</span>
+        <span class="nav-logo-sub">Barang Bekas Berkualitas</span>
+      </div>
+    </a>
+
+    <!-- Desktop nav links -->
+    <div class="nav-links" role="list">
+      <a href="#katalog"   data-nav-target="katalog"   role="listitem">Katalog</a>
+      <a href="#testimoni" data-nav-target="testimoni" role="listitem">Ulasan</a>
+      <a href="#tentang"   data-nav-target="tentang"   role="listitem">Tentang</a>
+      <a href="#kontak"    data-nav-target="kontak"    role="listitem">Kontak</a>
+      <a href="admin.html" id="nav-admin-link" role="listitem" style="display:none">
+        ⚙️ Admin
+      </a>
+    </div>
+
+    <!-- Mobile menu toggle -->
+    <button id="menu-toggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-menu">
+      ☰
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu" role="menu" aria-label="Menu mobile">
+  <a href="#katalog"   data-nav-target="katalog"   role="menuitem">🛒 Katalog Produk</a>
+  <a href="#testimoni" data-nav-target="testimoni" role="menuitem">💬 Ulasan Pelanggan</a>
+  <a href="#tentang"   data-nav-target="tentang"   role="menuitem">ℹ️ Tentang Kami</a>
+  <a href="#kontak"    data-nav-target="kontak"    role="menuitem">📞 Kontak</a>
+  <a href="admin.html">⚙️ Admin Panel</a>
+</div>
+
+
+<!-- ==================== HERO SECTION ==================== -->
+<section id="hero" aria-label="Beranda">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge hero-animate" style="animation-delay:0ms">
+      🔊 Elektronik Bekas Berkualitas
+    </div>
+
+    <h1 class="hero-title hero-animate" style="animation-delay:120ms">
+      <span data-store-name>Babeku Audio</span>
+    </h1>
+
+    <p class="hero-tagline hero-animate" style="animation-delay:240ms">
+      <em>Barang Bekas Berkualitas</em> — Speaker, Amplifier, Mixer, Microphone, dan Peralatan Salon Bekas Terbaik dengan Harga Paling Terjangkau di Tuban.
+    </p>
+
+    <div class="hero-cta hero-animate" style="animation-delay:360ms">
+      <button class="btn btn-amber btn-lg" data-nav-target="katalog"
+        onclick="scrollToSection('katalog')">
+        🛒 Lihat Katalog
+      </button>
+      <button class="btn btn-secondary btn-lg" style="border-color:rgba(255,255,255,.4);color:#fff"
+        data-nav-target="kontak" onclick="scrollToSection('kontak')">
+        💬 Hubungi Kami
+      </button>
+    </div>
+
+    <!-- Trust badges -->
+    <div class="hero-animate" style="animation-delay:480ms;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+      <span style="color:rgba(255,255,255,.55);font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+        ✅ Kondisi Terjamin
+      </span>
+      <span style="color:rgba(255,255,255,.55);font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+        🚚 Kirim Seluruh Indonesia
+      </span>
+      <span style="color:rgba(255,255,255,.55);font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+        🛡️ Garansi 7 Hari
+      </span>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator hero-animate" style="animation-delay:600ms" aria-hidden="true">
+    <div class="scroll-mouse">
+      <div class="scroll-dot"></div>
+    </div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+
+<!-- ==================== KATALOG SECTION ==================== -->
+<section id="katalog" class="section" aria-label="Katalog Produk">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-tag">🛒 Katalog</span>
+      <h2 class="section-title">Produk Pilihan Kami</h2>
+      <p class="section-subtitle">Semua produk telah dicek kondisinya dan siap dikirim ke seluruh Indonesia.</p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="katalog-controls reveal reveal-delay-1">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Cari produk... (speaker, mixer, mic)"
+          aria-label="Cari produk"
+          autocomplete="off"
+        >
+      </div>
+      <select id="filter-category" class="filter-select" aria-label="Filter kategori">
+        <!-- Populated by JS -->
+      </select>
+      <span class="product-count" id="product-count" aria-live="polite"></span>
+    </div>
+
+    <!-- Products Grid -->
+    <div id="products-grid" role="list" aria-label="Daftar produk">
+      <!-- Rendered by app.js -->
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" role="navigation" aria-label="Navigasi halaman produk"></div>
+  </div>
+</section>
+
+
+<!-- ==================== TESTIMONI SECTION ==================== -->
+<section id="testimoni" class="section" aria-label="Ulasan Pelanggan">
+  <div class="container">
+    <div class="section-header center reveal">
+      <span class="section-tag">💬 Ulasan</span>
+      <h2 class="section-title">Apa Kata Pelanggan Kami?</h2>
+      <p class="section-subtitle">Ribuan pelanggan puas berbelanja di Babeku Audio.</p>
+    </div>
+
+    <!-- Overall Rating -->
+    <div class="overall-rating-display reveal reveal-delay-1">
+      <div class="rating-big-num" id="overall-rating">5.0</div>
+      <div class="rating-detail">
+        <div class="stars-display">
+          <span class="star filled">★</span>
+          <span class="star filled">★</span>
+          <span class="star filled">★</span>
+          <span class="star filled">★</span>
+          <span class="star filled">★</span>
+        </div>
+        <span id="overall-count" style="color:rgba(255,255,255,.5);font-size:.82rem;font-weight:600;">(0 ulasan)</span>
+      </div>
+    </div>
+
+    <!-- Slider Nav -->
+    <div class="reviews-slider-wrap reveal reveal-delay-2">
+      <div class="reviews-slider-nav">
+        <button id="review-prev" aria-label="Ulasan sebelumnya">←</button>
+        <button id="review-next" aria-label="Ulasan berikutnya">→</button>
+      </div>
+
+      <!-- Reviews slider -->
+      <div id="reviews-container" role="list" aria-label="Daftar ulasan pelanggan">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- Sort & Review Form -->
+    <div class="review-sort-wrap reveal reveal-delay-3">
+      <label for="review-sort">Urutkan:</label>
+      <select id="review-sort" aria-label="Urutkan ulasan">
+        <option value="newest">Terbaru</option>
+        <option value="rating">Rating Tertinggi</option>
+      </select>
+    </div>
+
+    <!-- Add Review Form -->
+    <div class="review-form-section reveal reveal-delay-4">
+      <h3>✍️ Tulis Ulasan Anda</h3>
+      <form id="review-form" novalidate aria-label="Form ulasan pelanggan">
+        <div class="form-group">
+          <label class="form-label" for="reviewer-name">Nama Anda *</label>
+          <input
+            type="text"
+            id="reviewer-name"
+            name="reviewer-name"
+            class="form-input"
+            placeholder="Masukkan nama Anda"
+            maxlength="100"
+            required
+            autocomplete="name"
+          >
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rating *</label>
+          <!-- Bintang interaktif — di-generate langsung di HTML -->
+          <div class="star-rating-input" role="group" aria-label="Pilih rating bintang">
+            <button type="button" class="star-btn" data-value="1" aria-label="1 bintang" aria-pressed="false">★</button>
+            <button type="button" class="star-btn" data-value="2" aria-label="2 bintang" aria-pressed="false">★</button>
+            <button type="button" class="star-btn" data-value="3" aria-label="3 bintang" aria-pressed="false">★</button>
+            <button type="button" class="star-btn" data-value="4" aria-label="4 bintang" aria-pressed="false">★</button>
+            <button type="button" class="star-btn" data-value="5" aria-label="5 bintang" aria-pressed="false">★</button>
+            <input type="hidden" name="rating" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="review-ulasan">Ulasan *</label>
+          <textarea
+            id="review-ulasan"
+            name="ulasan"
+            class="form-textarea"
+            placeholder="Ceritakan pengalaman belanja Anda di Babeku Audio..."
+            rows="4"
+            minlength="10"
+            maxlength="1000"
+            required
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-amber">
+          📨 Kirim Ulasan
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================== TENTANG SECTION ==================== -->
+<section id="tentang" class="section section-alt" aria-label="Tentang Babeku Audio">
+  <div class="container">
+    <div class="about-grid">
+      <!-- Gambar / Ilustrasi -->
+      <div class="about-img-wrap reveal">
+        <img
+          src="https://placehold.co/640x480/1e3a8a/f59e0b?text=Babeku+Audio"
+          alt="Toko Babeku Audio — Barang Bekas Berkualitas"
+          loading="lazy"
+          onerror="this.src='https://placehold.co/640x480/1e3a8a/f59e0b?text=Babeku+Audio'"
+        >
+        <div class="about-img-overlay"></div>
+        <div class="about-img-badge">
+          Babeku Audio
+          <span>Tuban, Jawa Timur</span>
+        </div>
+      </div>
+
+      <!-- Konten -->
+      <div class="reveal reveal-delay-2">
+        <span class="section-tag">ℹ️ Tentang Kami</span>
+        <h2 class="section-title">Barang Bekas,<br>Kualitas Terjamin</h2>
+        <p class="about-tagline">
+          <strong>Babeku Audio</strong> (<em>Barang Bekas Berkualitas</em>) adalah toko spesialis elektronik bekas terpercaya di Tuban, Jawa Timur. Kami menjual berbagai peralatan sound system, speaker, amplifier, mixer, microphone, dan peralatan salon bekas pilihan dengan harga jauh di bawah pasaran.
+        </p>
+
+        <!-- Keunggulan -->
+        <div class="about-features">
+          <div class="feature-item">
+            <span class="feature-icon">✅</span>
+            <span class="feature-text">Kondisi dicek & terjamin sebelum dijual</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">💰</span>
+            <span class="feature-text">Harga terjangkau, jauh di bawah pasaran</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🛡️</span>
+            <span class="feature-text">Garansi 7 hari untuk setiap produk</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🚚</span>
+            <span class="feature-text">Pengiriman ke seluruh Indonesia</span>
+          </div>
+        </div>
+
+        <!-- Kategori -->
+        <div class="about-categories">
+          <h4>Kategori Produk</h4>
+          <div class="category-tags">
+            <span class="category-tag">🔊 Speaker</span>
+            <span class="category-tag">📻 Amplifier</span>
+            <span class="category-tag">🎛️ Mixer</span>
+            <span class="category-tag">🎤 Microphone</span>
+            <span class="category-tag">🎵 Sound System</span>
+            <span class="category-tag">💈 Alat Salon</span>
+            <span class="category-tag">⚡ Elektronik Lainnya</span>
+          </div>
+        </div>
+
+        <!-- Visi & Misi -->
+        <div class="vision-mission">
+          <div class="vm-card">
+            <h5>🎯 Visi</h5>
+            <p>Menjadi pilihan utama masyarakat untuk produk elektronik bekas berkualitas di Indonesia.</p>
+          </div>
+          <div class="vm-card">
+            <h5>💡 Misi</h5>
+            <p>Menyediakan produk bekas pilihan yang telah diverifikasi kondisinya dengan harga yang dapat dijangkau semua kalangan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================== KONTAK SECTION ==================== -->
+<section id="kontak" class="section" aria-label="Kontak Babeku Audio">
+  <div class="container">
+    <div class="kontak-grid">
+      <!-- Info Kontak -->
+      <div class="kontak-info reveal">
+        <span class="section-tag" style="background:rgba(245,158,11,.2);color:var(--secondary)">📞 Kontak</span>
+        <h2 class="section-title" style="color:#fff">Ada Pertanyaan?<br>Hubungi Kami!</h2>
+        <p class="section-subtitle">Kami siap membantu Anda setiap hari dari pagi hingga malam.</p>
+
+        <!-- Address -->
+        <div class="contact-item mt-4">
+          <div class="contact-icon">📍</div>
+          <div class="contact-text">
+            <strong>Alamat</strong>
+            <span data-store-address>Tuban, Jawa Timur, Indonesia</span>
+          </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="contact-item">
+          <div class="contact-icon">📱</div>
+          <div class="contact-text">
+            <strong>WhatsApp</strong>
+            <a href="https://wa.me/6285189858954" target="_blank" rel="noopener">
+              +62 851-8985-8954
+            </a>
+          </div>
+        </div>
+
+        <!-- Hours -->
+        <div class="contact-item">
+          <div class="contact-icon">🕐</div>
+          <div class="contact-text">
+            <strong>Jam Operasional</strong>
+            <span data-store-hours>Senin - Sabtu: 08.00 - 20.00 WIB</span>
+          </div>
+        </div>
+
+        <!-- WA CTA -->
+        <div class="wa-cta-block mt-4">
+          <a
+            href="#"
+            data-wa-link
+            target="_blank"
+            rel="noopener"
+            class="btn btn-whatsapp btn-lg"
+            aria-label="Chat WhatsApp Babeku Audio"
+          >
+            💬 Chat Sekarang di WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <!-- Social Media & Copy Link -->
+      <div class="reveal reveal-delay-2">
+        <div class="social-block">
+          <h4>📲 Ikuti Kami di Sosial Media</h4>
+          <div class="social-grid">
+            <a href="#" data-social-fb1 target="_blank" rel="noopener" class="social-link"
+               aria-label="Facebook Babeku Audio (1)">
+              <span class="social-icon">📘</span> Facebook
+            </a>
+            <a href="#" data-social-fb2 target="_blank" rel="noopener" class="social-link"
+               aria-label="Facebook Babeeku">
+              <span class="social-icon">📘</span> Babeeku
+            </a>
+            <a href="#" data-social-ig target="_blank" rel="noopener" class="social-link"
+               aria-label="Instagram Babeku Audio">
+              <span class="social-icon">📸</span> Instagram
+            </a>
+            <a href="#" data-social-yt target="_blank" rel="noopener" class="social-link"
+               aria-label="YouTube Babeku">
+              <span class="social-icon">▶️</span> YouTube
+            </a>
+          </div>
+
+          <!-- Copy Link -->
+          <button id="btn-copy-link" class="btn btn-secondary" aria-label="Salin link website">
+            🔗 Salin Link Toko Ini
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================== FOOTER ==================== -->
+<footer aria-label="Footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo" style="margin-bottom:10px;">
+          <div class="nav-logo-icon">B</div>
+          <div class="nav-logo-text">
+            <span class="nav-logo-name">Babeku Audio</span>
+            <span class="nav-logo-sub">Barang Bekas Berkualitas</span>
+          </div>
+        </div>
+        <p>Solusi elektronik bekas berkualitas dengan harga terjangkau. Tuban, Jawa Timur.</p>
+      </div>
+
+      <div class="footer-links">
+        <h5>Navigasi</h5>
+        <a href="#katalog"   data-nav-target="katalog">Katalog Produk</a>
+        <a href="#testimoni" data-nav-target="testimoni">Ulasan Pelanggan</a>
+        <a href="#tentang"   data-nav-target="tentang">Tentang Kami</a>
+        <a href="#kontak"    data-nav-target="kontak">Kontak</a>
+      </div>
+
+      <div class="footer-links">
+        <h5>Sosial Media</h5>
+        <a href="#" data-social-fb1 target="_blank" rel="noopener">Facebook (1)</a>
+        <a href="#" data-social-fb2 target="_blank" rel="noopener">Facebook Babeeku</a>
+        <a href="#" data-social-ig  target="_blank" rel="noopener">Instagram</a>
+        <a href="#" data-social-yt  target="_blank" rel="noopener">YouTube</a>
+      </div>
+
+      <div class="footer-links">
+        <h5>Layanan</h5>
+        <a href="#" data-wa-link target="_blank" rel="noopener">Chat WhatsApp</a>
+        <a href="admin.html">Admin Panel</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">
+        <span>Babeku Audio</span> &copy; 2026 — Barang Bekas Berkualitas
+      </p>
+      <div class="footer-legal">
+        <a href="#" onclick="return false;">Kebijakan Privasi</a>
+        <a href="#" onclick="return false;">Syarat &amp; Ketentuan</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ==================== PRODUCT MODAL ==================== -->
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-label="Detail Produk">
+  <div id="product-modal">
+    <div class="modal-inner">
+      <!-- Gallery -->
+      <div class="modal-gallery">
+        <div class="modal-gallery-main">
+          <img id="modal-main-img" src="" alt="" loading="lazy">
+          <button class="gallery-nav" id="gallery-prev" aria-label="Foto sebelumnya">&#8249;</button>
+          <button class="gallery-nav" id="gallery-next" aria-label="Foto berikutnya">&#8250;</button>
+        </div>
+        <div id="modal-thumbnails"></div>
+      </div>
+
+      <!-- Info -->
+      <div class="modal-info">
+        <!-- Close button -->
+        <button class="modal-close" onclick="closeModal()" aria-label="Tutup modal">&times;</button>
+
+        <h2 id="modal-title"></h2>
+        <div id="modal-price"></div>
+        <div id="modal-rating"></div>
+        <p id="modal-description"></p>
+
+        <!-- Spesifikasi -->
+        <dl class="modal-specs">
+          <dt>Kondisi</dt>
+          <dd id="modal-condition"></dd>
+          <dt>Garansi</dt>
+          <dd id="modal-warranty"></dd>
+          <dt>Lokasi</dt>
+          <dd id="modal-location"></dd>
+        </dl>
+
+        <!-- CTA buttons -->
+        <div class="modal-actions">
+          <button id="modal-btn-buy" class="btn btn-primary">🛒 Beli via WhatsApp</button>
+          <button id="modal-btn-ask" class="btn btn-whatsapp">💬 Tanya Detail</button>
+        </div>
+
+        <!-- Reviews for this product -->
+        <div class="modal-reviews">
+          <h4>💬 Ulasan Produk Ini</h4>
+          <div id="modal-reviews-list"></div>
+
+          <!-- Review form in modal -->
+          <h4 style="margin-top:16px">✍️ Tulis Ulasan</h4>
+          <form id="modal-review-form" novalidate style="margin-top:12px">
+            <div class="form-group">
+              <label class="form-label" for="modal-reviewer-name">Nama *</label>
+              <input
+                type="text"
+                id="modal-reviewer-name"
+                name="reviewer-name"
+                class="form-input"
+                placeholder="Nama Anda"
+                maxlength="100"
+                required
+                style="background:#f8f9fc;color:#1a1d2e;border-color:#e2e8f0"
+              >
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rating *</label>
+              <div class="star-rating-input" role="group" aria-label="Pilih rating">
+                <button type="button" class="star-btn" data-value="1" aria-label="1 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="2" aria-label="2 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="3" aria-label="3 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="4" aria-label="4 bintang" aria-pressed="false">★</button>
+                <button type="button" class="star-btn" data-value="5" aria-label="5 bintang" aria-pressed="false">★</button>
+                <input type="hidden" name="rating" value="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modal-ulasan">Ulasan *</label>
+              <textarea
+                id="modal-ulasan"
+                name="ulasan"
+                class="form-textarea"
+                placeholder="Bagaimana produk ini?"
+                rows="3"
+                minlength="10"
+                maxlength="500"
+                required
+                style="background:#f8f9fc;color:#1a1d2e;border-color:#e2e8f0"
+              ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">📨 Kirim Ulasan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container (di-generate oleh JS, placeholder) -->
+<div id="toast-container" aria-live="polite"></div>
+
+
+<!-- Supabase JS SDK v2 via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- App Scripts (urutan penting!) -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
