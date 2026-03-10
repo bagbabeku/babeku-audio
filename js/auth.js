@@ -19,13 +19,27 @@ window._authUser = null;
  * @param {Function} [onLogout] - Callback saat user logout
  */
 function initAuth(onLogin, onLogout) {
-  const auth = firebase.auth();
+  if (!window._supabase) return;
 
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      window._authUser = user;
-      saveSession(user.uid, user.email);
-      if (typeof onLogin === "function") onLogin(user);
+  // Tambah delay kecil untuk beri waktu session load
+  setTimeout(() => {
+    window._supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        window._authUser = session.user;
+        saveSession(session.user.id, session.user.email);
+        if (typeof onLogin === "function") onLogin(session.user);
+      } else {
+        window._authUser = null;
+        if (typeof onLogout === "function") onLogout();
+      }
+    });
+  }, 300); // tunggu 300ms
+
+  window._supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      window._authUser = session.user;
+      saveSession(session.user.id, session.user.email);
+      if (typeof onLogin === "function") onLogin(session.user);
     } else {
       window._authUser = null;
       clearSession();
@@ -33,7 +47,6 @@ function initAuth(onLogin, onLogout) {
     }
   });
 }
-
 
 /**
  * Login dengan email & password.
