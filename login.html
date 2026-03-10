@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Login Admin — Babeku Audio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="login-page">
+
+  <div class="login-card" role="main">
+    <div class="login-header">
+      <div class="login-logo" aria-hidden="true">B</div>
+      <h1>Admin Login</h1>
+      <p>Masuk ke dashboard <strong>Babeku Audio</strong></p>
+    </div>
+
+    <!-- Error message -->
+    <div class="login-error" id="login-error" role="alert" aria-live="assertive">
+      <span>⚠️</span>
+      <span id="login-error-msg">Error</span>
+    </div>
+
+    <!-- Login Form -->
+    <form class="login-form" id="login-form" novalidate aria-label="Form login admin">
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input
+          type="email"
+          id="login-email"
+          name="email"
+          placeholder="admin@babekuaudio.com"
+          autocomplete="email"
+          required
+          autofocus
+        >
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input
+          type="password"
+          id="login-password"
+          name="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+      <button type="submit" class="btn btn-primary login-submit" id="login-btn">
+        🔐 Masuk
+      </button>
+    </form>
+
+    <a href="index.html" class="login-back">← Kembali ke Toko</a>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    "use strict";
+
+    // Init Firebase
+    firebase.initializeApp(FIREBASE_CONFIG);
+
+    // Jika sudah login, redirect ke admin
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        saveSession(user.uid, user.email);
+        window.location.href = "admin.html";
+      }
+    });
+
+    const form    = document.getElementById("login-form");
+    const btn     = document.getElementById("login-btn");
+    const errEl   = document.getElementById("login-error");
+    const errMsg  = document.getElementById("login-error-msg");
+
+    function showError(msg) {
+      errMsg.textContent = msg;
+      errEl.classList.add("visible");
+    }
+    function hideError() {
+      errEl.classList.remove("visible");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const email    = form.querySelector("#login-email").value.trim();
+      const password = form.querySelector("#login-password").value;
+
+      if (!email || !password) {
+        showError("Email dan password wajib diisi.");
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = "Memproses...";
+
+      try {
+        const cred = await loginWithEmail(email, password);
+        saveSession(cred.user.uid, cred.user.email);
+        showToast("Login berhasil! Mengalihkan...", "success");
+        setTimeout(() => { window.location.href = "admin.html"; }, 800);
+      } catch (err) {
+        showError(err.message);
+        btn.disabled    = false;
+        btn.textContent = "🔐 Masuk";
+      }
+    });
+
+    // Keyboard: Enter submit
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && document.activeElement.tagName !== "BUTTON") {
+        form.dispatchEvent(new Event("submit"));
+      }
+    });
+  </script>
+</body>
+</html>
